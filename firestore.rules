@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'xarinnesi@gmail.com'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Admins list
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Products catalog
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow create: if request.resource.data.orderNumber is string &&
+                       request.resource.data.customerPhone is string &&
+                       request.resource.data.amount is number &&
+                       request.resource.data.paymentMethod is string &&
+                       request.resource.data.transactionId is string;
+      allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Mystery Boxes
+    match /mystery_boxes/{boxId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Payment Settings (bKash / Nagad numbers & instructions)
+    match /payment_settings/{paymentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Customers collection
+    match /customers/{customerId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.id == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.id == request.auth.uid;
+      allow update: if isAdmin() || (isSignedIn() && resource.data.id == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // Website Settings
+    match /website_settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Admin Auth & Credentials (protected)
+    match /admin_auth/{authId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Admin Activity Logs
+    match /admin_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+  }
+}

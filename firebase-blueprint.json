@@ -1,0 +1,183 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Gaming top-up product or service with price, stock, and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "stock": { "type": "number" },
+        "isUnlimited": { "type": "boolean" },
+        "isOutOfStock": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "description": { "type": "string" },
+        "image": { "type": "string" },
+        "badge": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "price", "isOutOfStock", "isActive"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer top-up order with payment proof and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "productTitle": { "type": "string" },
+        "productId": { "type": "string" },
+        "amount": { "type": "number" },
+        "gameUid": { "type": "string" },
+        "accountType": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "paymentNumber": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "paymentScreenshot": { "type": "string" },
+        "status": { "type": "string" },
+        "adminNote": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "orderNumber", "customerPhone", "productTitle", "amount", "paymentMethod", "transactionId", "status"]
+    },
+    "MysteryBox": {
+      "title": "MysteryBox",
+      "description": "Mystery box package with guaranteed item list and stock",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "image": { "type": "string" },
+        "badge": { "type": "string" },
+        "stock": { "type": "number" },
+        "isUnlimited": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "isActive"]
+    },
+    "PaymentSetting": {
+      "title": "PaymentSetting",
+      "description": "Payment gateway configuration for bKash and Nagad",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "method": { "type": "string" },
+        "number": { "type": "string" },
+        "accountType": { "type": "string" },
+        "isEnabled": { "type": "boolean" },
+        "instructions": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "method", "number", "isEnabled"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer record and account activity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "totalOrders": { "type": "number" },
+        "totalSpent": { "type": "number" },
+        "status": { "type": "string" },
+        "joinedAt": { "type": "string" },
+        "supportNotes": { "type": "string" }
+      },
+      "required": ["id", "name", "status"]
+    },
+    "WebsiteSetting": {
+      "title": "WebsiteSetting",
+      "description": "Global website configuration, banners, notices, and links",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "websiteName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "promoNotice": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "supportEmail": { "type": "string" },
+        "facebookLink": { "type": "string" },
+        "instagramLink": { "type": "string" },
+        "privacyPolicy": { "type": "string" },
+        "refundPolicy": { "type": "string" },
+        "termsAndConditions": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "websiteName"]
+    },
+    "AdminAuth": {
+      "title": "AdminAuth",
+      "description": "Administrator password hash and initial setup flags",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "passwordHash": { "type": "string" },
+        "salt": { "type": "string" },
+        "mustChangePassword": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "passwordHash", "salt", "mustChangePassword"]
+    },
+    "AdminLog": {
+      "title": "AdminLog",
+      "description": "Audit log for administrative operations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "adminUser": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "action", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Product catalog accessible to public for read, restricted to admin for write"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Orders created by customers, readable/updatable by admin, readable by owner"
+    },
+    "/mystery_boxes/{boxId}": {
+      "schema": "MysteryBox",
+      "description": "Mystery box definitions and guaranteed rewards"
+    },
+    "/payment_settings/{paymentId}": {
+      "schema": "PaymentSetting",
+      "description": "bKash and Nagad payment configuration"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customer profiles and order metrics"
+    },
+    "/website_settings/{settingId}": {
+      "schema": "WebsiteSetting",
+      "description": "Website global configuration and content"
+    },
+    "/admin_auth/{authId}": {
+      "schema": "AdminAuth",
+      "description": "Admin authorization credentials and password change flags"
+    },
+    "/admin_logs/{logId}": {
+      "schema": "AdminLog",
+      "description": "Audit trail logs for administrative activity"
+    }
+  }
+}

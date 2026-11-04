@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="indo_bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#1E1B4B"/>
+      <stop offset="50%" stopColor="#1E3A8A"/>
+      <stop offset="100%" stopColor="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#indo_bg)"/>
+
+  <!-- Indonesian Flag Shield -->
+  <g transform="translate(145, 60)" filter="drop-shadow(0 15px 30px rgba(0,0,0,0.5))">
+    <path d="M55 5 L105 25 L105 75 C105 105 55 125 55 125 C55 125 5 105 5 75 L5 25 Z" fill="#FFFFFF" stroke="#38BDF8" stroke-width="2"/>
+    <path d="M55 5 L105 25 L105 55 L5 55 L5 25 Z" fill="#DC2626"/>
+    <!-- Diamond in Center -->
+    <polygon points="55,40 70,55 55,80 40,55" fill="#38BDF8"/>
+  </g>
+
+  <text x="200" y="215" font-family="Arial Black, Orbitron, sans-serif" font-weight="900" font-size="20" fill="#FFFFFF" text-anchor="middle">INDONESIA SERVER (UID)</text>
+  <text x="200" y="242" font-family="Segoe UI, sans-serif" font-weight="900" font-size="15" fill="#38BDF8" text-anchor="middle">ইন্দোনেশিয়া সার্ভার ইউআইডি ডায়মন্ড</text>
+  <text x="200" y="266" font-family="Segoe UI, sans-serif" font-weight="600" font-size="12" fill="#E2E8F0" text-anchor="middle">৫০💎 থেকে ৭২৯০💎 ও মেম্বারশিপ</text>
+</svg>

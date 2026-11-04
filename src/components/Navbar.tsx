@@ -19,6 +19,7 @@ import {
   Film,
   Activity,
   Headphones,
+  ShoppingBag,
 } from 'lucide-react';
 import { WebsiteSettings, ProductCategory } from '../types';
 
@@ -29,6 +30,7 @@ interface NavbarProps {
   onOpenTrackModal: () => void;
   onOpenAdmin: () => void;
   onOpenCustomerProfile: () => void;
+  onOpenWelcomeSpin?: () => void;
   customerUser: any;
   customerWalletBalance?: number;
   onGoogleLogin: () => void;
@@ -48,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenTrackModal,
   onOpenAdmin,
   onOpenCustomerProfile,
+  onOpenWelcomeSpin,
   customerUser,
   customerWalletBalance = 0,
   onGoogleLogin,
@@ -187,6 +190,33 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Subscriptions</span>
             </button>
 
+            {/* My Order Desktop Nav Link */}
+            <button
+              onClick={onOpenTrackModal}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                isLightMode
+                  ? 'text-blue-600 hover:bg-blue-50 font-bold'
+                  : 'text-cyan-400 hover:bg-cyan-950/40 font-bold'
+              }`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>My Order</span>
+            </button>
+
+            {/* Welcome Spin Desktop Nav Link */}
+            {onOpenWelcomeSpin && (
+              <button
+                onClick={onOpenWelcomeSpin}
+                className="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 to-yellow-500/15 text-amber-600 dark:text-amber-400 hover:from-amber-500/25 hover:to-yellow-500/25 border border-amber-400/40 font-bold shadow-xs"
+              >
+                <span className="text-sm">🎡</span>
+                <span>Welcome Spin</span>
+                <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500 text-black font-black uppercase">
+                  ৮০০০💎
+                </span>
+              </button>
+            )}
+
             <button
               onClick={onScrollToLiveOrders}
               className="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition-all flex items-center gap-1"
@@ -231,6 +261,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Welcome Spin Button in Actions */}
+            {onOpenWelcomeSpin && (
+              <button
+                onClick={onOpenWelcomeSpin}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-black transition-all transform active:scale-95 shadow-sm bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-600 dark:text-amber-400 border border-amber-400/40 hover:border-amber-400 hover:shadow-amber-500/10 cursor-pointer"
+                title="Welcome Bonus Spin Wheel - Win up to 8,000 Diamonds!"
+              >
+                <span className="text-sm">🎡</span>
+                <span className="hidden md:inline">Spin Wheel</span>
+              </button>
+            )}
+
             {/* Theme Toggle (Light TopupPapa / Dark Gaming) */}
             {onToggleTheme && (
               <button
@@ -246,18 +288,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Track Order */}
+            {/* My Order Button in Actions */}
             <button
               onClick={onOpenTrackModal}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all transform active:scale-95 shadow-sm border ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all transform active:scale-95 shadow-sm border ${
                 isLightMode
-                  ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+                  ? 'bg-blue-50 hover:bg-blue-100 text-[#0066FF] border-blue-200'
                   : 'bg-[#151c30] hover:bg-[#1c2642] text-cyan-300 hover:text-cyan-200 border-cyan-500/30'
               }`}
-              title="Track your order status"
+              title="My Order & Status Tracking"
             >
-              <Crosshair className="w-4 h-4 text-blue-600 dark:text-cyan-400 animate-spin-slow" />
-              <span className="hidden sm:inline">Track</span>
+              <ShoppingBag className="w-4 h-4 text-[#0066FF] dark:text-cyan-400" />
+              <span>My Order</span>
             </button>
 
             {/* Customer User / Google Login & Wallet Balance */}
@@ -371,6 +413,37 @@ export const Navbar: React.FC<NavbarProps> = ({
               isLightMode ? 'border-slate-200' : 'border-slate-800'
             }`}
           >
+            {/* Quick Action Banner on Mobile Menu */}
+            <div className="grid grid-cols-2 gap-2 pb-1">
+              <button
+                onClick={() => {
+                  onOpenTrackModal();
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl font-bold text-xs shadow-xs border ${
+                  isLightMode
+                    ? 'bg-blue-50 text-[#0066FF] border-blue-200'
+                    : 'bg-cyan-950/60 text-cyan-300 border-cyan-500/40'
+                }`}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>My Order</span>
+              </button>
+
+              {onOpenWelcomeSpin && (
+                <button
+                  onClick={() => {
+                    onOpenWelcomeSpin();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-600 dark:text-amber-400 border border-amber-400/40 shadow-xs"
+                >
+                  <span className="text-sm">🎡</span>
+                  <span>Welcome Spin</span>
+                </button>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat) => (
                 <button
@@ -405,9 +478,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onOpenTrackModal();
                   setMobileMenuOpen(false);
                 }}
-                className="text-blue-600 dark:text-cyan-400 font-semibold underline"
+                className="text-blue-600 dark:text-cyan-400 font-bold underline"
               >
-                Track Order
+                My Order স্ট্যাটাস
               </button>
             </div>
           </div>

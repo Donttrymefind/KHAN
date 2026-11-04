@@ -54,7 +54,15 @@ function saveLocal<T>(key: string, data: T): void {
   } catch {}
 }
 
+const PRICE_VERSION = 'v4_topup_expanded_15_20';
+
 function loadProducts(): Product[] {
+  const currentVersion = localStorage.getItem('ktu_price_ver');
+  if (currentVersion !== PRICE_VERSION) {
+    localStorage.setItem('ktu_price_ver', PRICE_VERSION);
+    saveLocal(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+    return INITIAL_PRODUCTS;
+  }
   const stored = loadLocal<Product[]>(STORAGE_KEYS.PRODUCTS, []);
   if (!stored || stored.length === 0) return INITIAL_PRODUCTS;
   // Merge any new initial products that don't exist in local cache
@@ -361,7 +369,7 @@ class StoreService {
   async updatePaymentMethod(
     id: string,
     number: string,
-    accountType: 'Personal' | 'Agent' | 'Merchant',
+    accountType: 'Personal' | 'Agent' | 'Merchant' | 'Digital Wallet',
     isEnabled: boolean,
     instructions: string
   ) {
@@ -597,6 +605,45 @@ class StoreService {
         `Wallet balance for ${cust.name} (${cust.phone}) updated to ৳${updated.walletBalance}`
       );
     } catch {}
+  }
+
+  async depositCustomerWallet(
+    userIdentifier: string,
+    name: string,
+    email: string,
+    phone: string,
+    amount: number
+  ): Promise<number> {
+    let cust = this.customers.find(
+      (c) =>
+        (userIdentifier && c.id === userIdentifier) ||
+        (email && c.email === email) ||
+        (phone && c.phone === phone)
+    );
+    if (cust) {
+      const newBal = (cust.walletBalance || 0) + amount;
+      await this.updateCustomerWallet(cust.id, newBal);
+      return newBal;
+    } else {
+      const newCust: Customer = {
+        id: userIdentifier || 'cust_' + Date.now(),
+        name: name || 'Customer',
+        phone: phone || '01700000000',
+        email: email || '',
+        walletBalance: amount,
+        totalOrders: 0,
+        totalSpent: 0,
+        status: 'active',
+        joinedAt: new Date().toISOString(),
+      };
+      this.customers.push(newCust);
+      saveLocal(STORAGE_KEYS.CUSTOMERS, this.customers);
+      this.notify();
+      try {
+        await setDoc(doc(db, 'customers', newCust.id), newCust);
+      } catch {}
+      return amount;
+    }
   }
 
   async triggerAutoTopupApi(orderId: string): Promise<{ success: boolean; message: string }> {

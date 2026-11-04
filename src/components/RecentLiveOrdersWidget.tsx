@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Activity,
   CheckCircle2,
   Clock,
-  ExternalLink,
-  ShieldCheck,
   Zap,
-  TrendingUp,
-  User,
 } from 'lucide-react';
 import { Order } from '../types';
 
@@ -20,97 +16,118 @@ interface RecentLiveOrdersWidgetProps {
 export const RecentLiveOrdersWidget: React.FC<RecentLiveOrdersWidgetProps> = ({
   orders,
   onTrackOrder,
-  isLightMode = false,
+  isLightMode = true,
 }) => {
-  // Generate sample dynamic live orders if list is short
+  // Sample realistic recent orders matching TOPUPPAPA screenshot feed
   const mockLiveOrders = [
     {
       id: 'm1',
+      name: 'Md Imran Hossain',
+      avatar: 'M',
+      color: 'bg-amber-600',
+      productTitle: 'Premium Mystery Box',
       orderNumber: 'KTU-920412',
-      uidMasked: '29481****',
-      productTitle: 'Free Fire 690 Diamonds',
-      amount: 475,
-      status: 'Completed',
-      timeAgo: '১ মিনিট আগে',
     },
     {
       id: 'm2',
+      name: 'Zxxxx',
+      avatar: 'Z',
+      color: 'bg-blue-600',
+      productTitle: '50 Diamond',
       orderNumber: 'KTU-920411',
-      uidMasked: '18402****',
-      productTitle: '1x Weekly Membership',
-      amount: 160,
-      status: 'Completed',
-      timeAgo: '৩ মিনিট আগে',
     },
     {
       id: 'm3',
+      name: 'Md Imran Hossain',
+      avatar: 'M',
+      color: 'bg-amber-600',
+      productTitle: 'Premium Mystery Box',
       orderNumber: 'KTU-920410',
-      uidMasked: '39105****',
-      productTitle: 'Friday Special: 240💎 + 60💎',
-      amount: 170,
-      status: 'Completed',
-      timeAgo: '৫ মিনিট আগে',
     },
     {
       id: 'm4',
+      name: 'Md Imran Hossain',
+      avatar: 'M',
+      color: 'bg-amber-600',
+      productTitle: 'Legendary Mystery Box',
       orderNumber: 'KTU-920409',
-      uidMasked: '59201****',
-      productTitle: 'Netflix 1 Month 4K Profile',
-      amount: 250,
-      status: 'Processing',
-      timeAgo: '৬ মিনিট আগে',
     },
     {
       id: 'm5',
+      name: 'ador khan',
+      avatar: 'a',
+      color: 'bg-emerald-600',
+      productTitle: '1x Weekly Lite',
       orderNumber: 'KTU-920408',
-      uidMasked: '49182****',
-      productTitle: 'Free Fire 1,000 Diamonds',
-      amount: 690,
-      status: 'Completed',
-      timeAgo: '৮ মিনিট আগে',
     },
     {
       id: 'm6',
+      name: 'Siam Hossain',
+      avatar: 'S',
+      color: 'bg-rose-600',
+      productTitle: 'Premium Mystery Box',
       orderNumber: 'KTU-920407',
-      uidMasked: '79201****',
-      productTitle: 'Complete Level Up Pass (802💎)',
-      amount: 190,
-      status: 'Completed',
-      timeAgo: '১১ মিনিট আগে',
+    },
+    {
+      id: 'm7',
+      name: 'Salman FF',
+      avatar: 'S',
+      color: 'bg-purple-600',
+      productTitle: 'Lucky Mystery Box',
+      orderNumber: 'KTU-920406',
+    },
+    {
+      id: 'm8',
+      name: 'Free Fire',
+      avatar: 'F',
+      color: 'bg-indigo-600',
+      productTitle: '355 Diamond',
+      orderNumber: 'KTU-920405',
+    },
+    {
+      id: 'm9',
+      name: 'sakib bhuiyan',
+      avatar: 's',
+      color: 'bg-cyan-600',
+      productTitle: 'Legendary Mystery Box',
+      orderNumber: 'KTU-920404',
+    },
+    {
+      id: 'm10',
+      name: 'Arafat Rahman',
+      avatar: 'A',
+      color: 'bg-blue-700',
+      productTitle: '25 Diamond',
+      orderNumber: 'KTU-920403',
     },
   ];
 
-  // Combine real store orders with recent live feed
-  const displayOrders = orders.slice(0, 8).map((o, idx) => ({
+  // Map real store orders if present
+  const realOrdersFormatted = orders.slice(0, 10).map((o) => ({
     id: o.id,
-    orderNumber: o.orderNumber,
-    uidMasked: o.gameUid
-      ? `${o.gameUid.slice(0, 4)}****`
-      : o.socialLink
-      ? 'FB/Link'
-      : `${o.customerPhone.slice(0, 3)}****${o.customerPhone.slice(-2)}`,
+    name: o.customerName || (o.gameUid ? `Player ${o.gameUid.slice(0, 4)}` : 'Customer'),
+    avatar: (o.customerName || 'C')[0].toUpperCase(),
+    color: 'bg-[#0066FF]',
     productTitle: o.productTitle,
-    amount: o.amount,
-    status: o.status === 'Completed' ? 'Completed' : 'Processing',
-    timeAgo: `${(idx + 1) * 2} মিনিট আগে`,
+    orderNumber: o.orderNumber,
   }));
 
-  const activeFeed = displayOrders.length >= 4 ? displayOrders : mockLiveOrders;
+  const displayList = realOrdersFormatted.length >= 4 ? realOrdersFormatted : mockLiveOrders;
 
   return (
     <div
       className={`rounded-2xl border transition-all overflow-hidden ${
         isLightMode
-          ? 'bg-white border-blue-200/80 shadow-md shadow-blue-500/5'
-          : 'bg-[#0f1422] border-blue-500/30 shadow-xl'
+          ? 'bg-white border-slate-200/90 shadow-sm'
+          : 'bg-[#0f1422] border-slate-800 shadow-xl'
       }`}
     >
       {/* Widget Header */}
       <div
         className={`px-4 sm:px-6 py-3.5 flex items-center justify-between border-b ${
           isLightMode
-            ? 'bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border-blue-100'
-            : 'bg-[#141b2d] border-blue-500/20'
+            ? 'bg-slate-50/80 border-slate-200'
+            : 'bg-[#141b2d] border-slate-800'
         }`}
       >
         <div className="flex items-center gap-2.5">
@@ -119,76 +136,65 @@ export const RecentLiveOrdersWidget: React.FC<RecentLiveOrdersWidgetProps> = ({
             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
           </span>
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <Activity className="w-4 h-4 text-[#0066FF]" />
             <h3
               className={`font-['Orbitron'] font-black text-sm sm:text-base tracking-wider ${
                 isLightMode ? 'text-slate-900' : 'text-white'
               }`}
             >
-              Recent Live Orders (লাইভ অর্ডার আপডেট)
+              Recent Orders (সাম্প্রতিক সফল অর্ডার)
             </h3>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-            <Zap className="w-3 h-3" />
-            <span>অটো-ডেলিভারি চালু আছে</span>
-          </span>
-          <span className="text-xs font-mono font-semibold text-slate-500">
-            {activeFeed.length}টি লাইভ
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+            <Zap className="w-3 h-3 text-emerald-500" />
+            <span>অটো-ডেলিভারি একটিভ</span>
           </span>
         </div>
       </div>
 
-      {/* Orders Grid/Ticker */}
-      <div className="p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-        {activeFeed.map((item) => (
+      {/* Orders List matching TOPUPPAPA Screenshot 4 */}
+      <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+        {displayList.map((item) => (
           <div
             key={item.id}
             onClick={() => onTrackOrder?.(item.orderNumber)}
-            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+            className={`px-4 sm:px-6 py-3 flex items-center justify-between gap-3 transition-colors cursor-pointer ${
               isLightMode
-                ? 'bg-slate-50/70 hover:bg-blue-50/60 border-slate-200/80 hover:border-blue-300'
-                : 'bg-[#151c2e] hover:bg-[#1b253d] border-slate-800 hover:border-blue-500/40'
+                ? 'hover:bg-slate-50/80'
+                : 'hover:bg-slate-800/40'
             }`}
           >
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-mono text-xs font-bold text-blue-600 dark:text-cyan-400">
-                  {item.orderNumber}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  UID: {item.uidMasked}
-                </span>
-              </div>
-              <p
-                className={`text-xs font-semibold truncate ${
-                  isLightMode ? 'text-slate-800' : 'text-slate-200'
-                }`}
+            {/* Left: Avatar + Customer info */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm ${item.color}`}
               >
-                {item.productTitle}
-              </p>
-              <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-1">
-                <Clock className="w-3 h-3" />
-                <span>{item.timeAgo}</span>
-                <span>•</span>
-                <span className="font-bold text-amber-500">৳{item.amount}</span>
+                {item.avatar}
+              </div>
+
+              <div className="min-w-0">
+                <h4
+                  className={`font-bold text-xs sm:text-sm truncate ${
+                    isLightMode ? 'text-slate-900' : 'text-white'
+                  }`}
+                >
+                  {item.name}
+                </h4>
+                <p className="text-xs text-slate-500 truncate">
+                  {item.productTitle}
+                </p>
               </div>
             </div>
 
-            <div className="shrink-0 text-right">
-              {item.status === 'Completed' ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>Done</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
-                  <Clock className="w-3 h-3 animate-spin" />
-                  <span>Processing</span>
-                </span>
-              )}
+            {/* Right: Green Done Badge matching screenshot */}
+            <div className="shrink-0">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Done</span>
+              </span>
             </div>
           </div>
         ))}

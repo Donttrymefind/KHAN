@@ -1,26 +1,45 @@
-import React from 'react';
-import { Radio, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { X } from 'lucide-react';
 
 interface PromoNoticeProps {
-  notice: string;
+  notice?: string;
+  isLightMode?: boolean;
 }
 
-export const PromoNotice: React.FC<PromoNoticeProps> = ({ notice }) => {
-  if (!notice) return null;
+export const PromoNotice: React.FC<PromoNoticeProps> = ({
+  notice = 'এখানে আমাদের সাইটে রাত দিন ২৪ ঘণ্টা অর্ডার করতে পারবেন। ধন্যবাদ।',
+  isLightMode = true,
+}) => {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) return null;
 
   return (
-    <div className="bg-gradient-to-r from-amber-600/20 via-orange-500/20 to-amber-600/20 border-b border-amber-500/30 text-amber-200 text-xs sm:text-sm py-2 px-4 shadow-sm relative overflow-hidden">
-      <div className="max-w-7xl mx-auto flex items-center gap-2">
-        <div className="flex items-center gap-1.5 shrink-0 px-2 py-0.5 rounded bg-amber-500/30 border border-amber-400/50 text-amber-300 font-bold text-[11px] uppercase tracking-wider animate-pulse">
-          <Zap className="w-3.5 h-3.5 text-amber-300" />
-          <span>Notice</span>
-        </div>
+    <div className={`border-b transition-colors ${
+      isLightMode
+        ? 'bg-white border-slate-200 text-slate-700 shadow-xs'
+        : 'bg-[#0f1524] border-slate-800 text-slate-200'
+    }`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-3 overflow-hidden flex-1">
+          {/* NOTICE blue badge matching Screenshot 3 */}
+          <span className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#0066FF] text-white shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span>NOTICE</span>
+          </span>
 
-        <div className="relative overflow-hidden w-full whitespace-nowrap">
-          <p className="inline-block animate-marquee font-medium text-slate-200">
+          <p className="truncate font-medium text-slate-800 dark:text-slate-200 flex-1">
             {notice}
           </p>
         </div>
+
+        <button
+          onClick={() => setDismissed(true)}
+          className="shrink-0 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+          title="Dismiss Notice"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );

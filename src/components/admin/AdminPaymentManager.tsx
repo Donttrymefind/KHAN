@@ -21,7 +21,7 @@ interface AdminPaymentManagerProps {
   onUpdatePayment: (
     id: string,
     number: string,
-    accountType: 'Personal' | 'Agent' | 'Merchant',
+    accountType: 'Personal' | 'Agent' | 'Merchant' | 'Digital Wallet',
     isEnabled: boolean,
     instructions: string
   ) => Promise<void>;
@@ -36,7 +36,7 @@ export const AdminPaymentManager: React.FC<AdminPaymentManagerProps> = ({
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNumber, setEditNumber] = useState('');
-  const [editAccountType, setEditAccountType] = useState<'Personal' | 'Agent' | 'Merchant'>('Personal');
+  const [editAccountType, setEditAccountType] = useState<'Personal' | 'Agent' | 'Merchant' | 'Digital Wallet'>('Personal');
   const [editIsEnabled, setEditIsEnabled] = useState(true);
   const [editInstructions, setEditInstructions] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);

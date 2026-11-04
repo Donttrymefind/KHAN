@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="ff_bg" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#0284C7"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </radialGradient>
+
+    <!-- Diamond Gradients -->
+    <linearGradient id="dia_light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#67E8F9"/>
+      <stop offset="70%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0369A1"/>
+    </linearGradient>
+
+    <linearGradient id="dia_dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+
+    <linearGradient id="gold_badge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+
+    <linearGradient id="red_ribbon" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#B91C1C"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="shadow_deep" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000000" flood-opacity="0.85"/>
+    </filter>
+    <filter id="dia_glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="300" fill="url(#ff_bg)"/>
+
+  <!-- Cyan Light Beams -->
+  <g opacity="0.35">
+    <polygon points="200,120 120,0 160,0" fill="#38BDF8"/>
+    <polygon points="200,120 185,0 215,0" fill="#FFFFFF"/>
+    <polygon points="200,120 240,0 280,0" fill="#38BDF8"/>
+    <polygon points="200,120 340,40 380,80" fill="#0284C7"/>
+    <polygon points="200,120 20,80 60,40" fill="#0284C7"/>
+  </g>
+
+  <!-- Glowing Aura -->
+  <circle cx="200" cy="115" r="70" fill="#0284C7" opacity="0.4" filter="url(#dia_glow)"/>
+
+  <!-- Sparkles in Sky -->
+  <g fill="#FFFFFF" opacity="0.9" filter="url(#dia_glow)">
+    <path d="M85 60 l3 6 l6 3 l-6 3 l-3 6 l-3 -6 l-6 -3 l6 -3 z"/>
+    <path d="M315 50 l3 6 l6 3 l-6 3 l-3 6 l-3 -6 l-6 -3 l6 -3 z"/>
+    <circle cx="95" cy="110" r="3" fill="#67E8F9"/>
+    <circle cx="305" cy="115" r="3" fill="#67E8F9"/>
+  </g>
+
+  <!-- Crate Overflowing with 5000 Diamonds -->
+  <g transform="translate(110, 50)" filter="url(#shadow_deep)">
+    <!-- Base Cyber Diamond Chest -->
+    <polygon points="20,85 160,85 175,130 5,130" fill="#0F172A" stroke="#38BDF8" stroke-width="2.5"/>
+    <rect x="25" y="90" width="130" height="35" rx="4" fill="#0284C7" opacity="0.2"/>
+
+    <!-- Piles of Cyan Diamonds in Chest -->
+    <!-- Diamond Cluster Left -->
+    <polygon points="35,80 50,60 65,80 50,100" fill="url(#dia_light)" stroke="#E0F2FE" stroke-width="1.2"/>
+    <polygon points="35,80 50,72 65,80 50,60" fill="#FFFFFF" opacity="0.8"/>
+
+    <!-- Diamond Cluster Right -->
+    <polygon points="115,80 130,60 145,80 130,100" fill="url(#dia_light)" stroke="#E0F2FE" stroke-width="1.2"/>
+    <polygon points="115,80 130,72 145,80 130,60" fill="#FFFFFF" opacity="0.8"/>
+
+    <!-- Huge Central 5000 Diamond -->
+    <g transform="translate(90, 50)" filter="url(#dia_glow)">
+      <!-- Top facets -->
+      <polygon points="0,-30 25,-12 0,0 -25,-12" fill="#BAE6FD" stroke="#FFFFFF" stroke-width="1.8"/>
+      <!-- Side facets -->
+      <polygon points="-25,-12 0,0 0,38 -20,12" fill="url(#dia_dark)" stroke="#E0F2FE" stroke-width="1.5"/>
+      <polygon points="25,-12 0,0 0,38 20,12" fill="url(#dia_light)" stroke="#E0F2FE" stroke-width="1.5"/>
+    </g>
+
+    <!-- Chest Front Plate with "5,000💎 BUNDLE" -->
+    <rect x="20" y="98" width="140" height="28" rx="6" fill="#0369A1" stroke="#FDE047" stroke-width="2"/>
+    <text x="90" y="117" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="15" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">
+      5000💎 BUNDLE
+    </text>
+  </g>
+
+  <!-- Ribbon Top Badge: +100% 1ST TOP-UP BONUS -->
+  <g transform="translate(85, 22)" filter="url(#shadow_deep)">
+    <rect width="230" height="28" rx="14" fill="url(#red_ribbon)" stroke="#FDE047" stroke-width="1.8"/>
+    <text x="115" y="19" font-family="Arial Black, Orbitron, sans-serif" font-weight="900" font-size="12" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">
+      ★ +100% 1ST TOP-UP BONUS ★
+    </text>
+  </g>
+
+  <!-- Bottom Title Badge -->
+  <g transform="translate(30, 186)" filter="url(#shadow_deep)">
+    <rect width="340" height="42" rx="21" fill="#082F49" stroke="#38BDF8" stroke-width="2"/>
+    <text x="170" y="27" font-family="Arial Black, Orbitron, sans-serif" font-weight="900" font-size="16" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">
+      FIRST TOPUP <tspan fill="#38BDF8">BONUS 5000💎</tspan>
+    </text>
+  </g>
+
+  <!-- Subtitles -->
+  <text x="200" y="255" font-family="Segoe UI, Hind Siliguri, sans-serif" font-weight="900" font-size="14" fill="#38BDF8" text-anchor="middle">
+    প্রথম টপআপে নিশ্চিত এক্সট্রা ডায়মন্ড
+  </text>
+  <text x="200" y="278" font-family="Segoe UI, Hind Siliguri, sans-serif" font-weight="700" font-size="12" fill="#FDE047" text-anchor="middle">
+    অফিশিয়াল ফ্রি ফায়ার ৫০০০💎 বোনাস প্যাক
+  </text>
+</svg>

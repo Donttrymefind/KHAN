@@ -9,6 +9,7 @@ import {
   Bot,
   ShieldCheck,
   Clock,
+  Headphones,
 } from 'lucide-react';
 
 interface FloatingSupportButtonProps {
@@ -30,18 +31,22 @@ export const FloatingSupportButton: React.FC<FloatingSupportButtonProps> = ({
 
   return (
     <>
-      {/* Floating Button */}
-      <div className="fixed bottom-20 sm:bottom-6 right-5 z-40">
+      {/* Floating Headset Button matching TOPUPPAPA Screenshot 1, 2, 3, 4 */}
+      <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2">
+        <div
+          onClick={() => setIsOpen(!isOpen)}
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#111827] text-slate-800 dark:text-slate-100 text-xs font-bold shadow-lg border border-slate-200 dark:border-slate-800 cursor-pointer animate-pulse hover:bg-slate-50 transition-colors"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span>সাহায্য লাগবে?</span>
+        </div>
+
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-['Orbitron'] font-black text-xs sm:text-sm tracking-wider shadow-2xl shadow-blue-600/50 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-blue-400/40"
+          className="w-12 h-12 rounded-full bg-[#0066FF] hover:bg-blue-600 text-white flex items-center justify-center shadow-xl shadow-blue-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer border-2 border-white dark:border-[#111827]"
+          title="সাহায্য লাগবে?"
         >
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-          </span>
-          <MessageCircle className="w-5 h-5" />
-          <span>সাহায্য লাগবে? (Need Help?)</span>
+          <Headphones className="w-6 h-6" />
         </button>
       </div>
 

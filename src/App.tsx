@@ -17,6 +17,10 @@ import { PromoNotice } from './components/PromoNotice';
 import { TelegramNoticeBar } from './components/TelegramNoticeBar';
 import { HeroBanner } from './components/HeroBanner';
 import { GameShopBoxes } from './components/GameShopBoxes';
+import { TopupPapaBoxGrid, TopupBoxItem } from './components/TopupPapaBoxGrid';
+import { TopupBuzzProductPage } from './components/TopupBuzzProductPage';
+import { AddMoneyModal } from './components/AddMoneyModal';
+import { BottomMobileBar } from './components/BottomMobileBar';
 import { DiamondShopPortal } from './components/DiamondShopPortal';
 import { SocialBoostPortal } from './components/SocialBoostPortal';
 import { RecentLiveOrdersWidget } from './components/RecentLiveOrdersWidget';
@@ -26,7 +30,8 @@ import { ProductCard } from './components/ProductCard';
 import { MysteryBoxCard } from './components/MysteryBoxCard';
 import { GuaranteedRewardsModal } from './components/GuaranteedRewardsModal';
 import { CheckoutModal } from './components/CheckoutModal';
-import { TrackOrderModal } from './components/TrackOrderModal';
+import { MyOrderModal } from './components/MyOrderModal';
+import { WelcomeBonusSpinModal } from './components/WelcomeBonusSpinModal';
 import { CustomerProfileModal } from './components/CustomerProfileModal';
 import { PolicyModal } from './components/PolicyModal';
 import { Footer } from './components/Footer';
@@ -55,9 +60,10 @@ export default function App() {
   // Light / Dark Theme state (defaulting to TopupPapa/TopupBuzz clean style)
   const [isLightMode, setIsLightMode] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('ktu_theme') === 'light';
+      const stored = localStorage.getItem('ktu_theme');
+      return stored !== null ? stored === 'light' : true;
     } catch {
-      return false;
+      return true;
     }
   });
 
@@ -84,7 +90,13 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // TopupPapa Box / Dedicated TopupBuzz Product Page state
+  const [selectedTopupBox, setSelectedTopupBox] = useState<TopupBoxItem | null>(null);
+  const [addMoneyOpen, setAddMoneyOpen] = useState(false);
+  const [userVouchersOpen, setUserVouchersOpen] = useState(false);
+
   // Customer Modals
+  const [welcomeSpinOpen, setWelcomeSpinOpen] = useState(false);
   const [previewBox, setPreviewBox] = useState<MysteryBox | null>(null);
   const [checkoutItem, setCheckoutItem] = useState<Product | MysteryBox | null>(null);
   const [checkoutInitialUid, setCheckoutInitialUid] = useState('');
@@ -94,6 +106,32 @@ export default function App() {
   const [policyModalType, setPolicyModalType] = useState<'terms' | 'privacy' | 'refund' | null>(
     null
   );
+
+  // Helper to store user's recent orders in localStorage for instant tracking
+  const recordUserRecentOrderId = (orderNum: string) => {
+    try {
+      const raw = localStorage.getItem('ktu_my_order_ids');
+      const list: string[] = raw ? JSON.parse(raw) : [];
+      if (!list.includes(orderNum)) {
+        list.unshift(orderNum);
+        localStorage.setItem('ktu_my_order_ids', JSON.stringify(list.slice(0, 30)));
+      }
+    } catch {}
+  };
+
+  // Welcome Bonus Spin Auto Popup on first visit
+  useEffect(() => {
+    try {
+      const hasSeenSpin = sessionStorage.getItem('ktu_welcome_spin_opened');
+      if (!hasSeenSpin) {
+        sessionStorage.setItem('ktu_welcome_spin_opened', 'true');
+        const timer = setTimeout(() => {
+          setWelcomeSpinOpen(true);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, []);
 
   // Admin Modals & Selection
   const [adminLogsOpen, setAdminLogsOpen] = useState(false);
@@ -206,8 +244,86 @@ export default function App() {
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Current logged in customer & wallet balance
+  const currentCustomer = customers.find(
+    (c) =>
+      customerUser &&
+      (c.id === customerUser.uid || (c.email && c.email === customerUser.email))
+  );
+  const customerWalletBalance = currentCustomer?.walletBalance || 0;
+
+  const handleProceedBoxOrder = async (
+    pkg: any,
+    gameUid: string,
+    paymentMethod: 'Wallet' | 'Instant'
+  ) => {
+    if (!selectedTopupBox) return;
+
+    if (paymentMethod === 'Wallet') {
+      const order = await store.createOrder({
+        customerId: customerUser?.uid || 'guest_' + Date.now(),
+        customerName: customerUser?.displayName || 'Player ' + gameUid.slice(-4),
+        customerPhone: currentCustomer?.phone || '01700000000',
+        customerEmail: customerUser?.email || '',
+        productTitle: `${selectedTopupBox.title} - ${pkg.title}`,
+        productId: pkg.id,
+        productCategory: selectedTopupBox.category,
+        amount: pkg.price,
+        gameUid: gameUid,
+        paymentMethod: 'Wallet',
+        paymentNumber: 'Wallet Balance',
+        transactionId: 'WAL-' + Date.now(),
+        status: 'Completed',
+        adminNote: 'Instant purchase via Wallet Balance. Diamonds sent to UID.',
+      });
+
+      // Deduct wallet balance
+      if (currentCustomer?.id) {
+        const remaining = Math.max(0, (currentCustomer.walletBalance || 0) - pkg.price);
+        await store.updateCustomerWallet(currentCustomer.id, remaining);
+      }
+
+      recordUserRecentOrderId(order.orderNumber);
+      setSelectedTopupBox(null);
+      setTrackOrderNumber(order.orderNumber);
+      setTrackOrderOpen(true);
+    } else {
+      // Instant Pay (bKash / Nagad / Rocket)
+      const fakeProduct: Product = {
+        id: pkg.id,
+        name: `${selectedTopupBox.title} - ${pkg.title}`,
+        category: (selectedTopupBox.category as any) || 'diamond',
+        price: pkg.price,
+        originalPrice: pkg.originalPrice || pkg.price,
+        stock: -1,
+        isUnlimited: true,
+        isOutOfStock: false,
+        isActive: true,
+        description: `Instant recharge for ${selectedTopupBox.title} (${pkg.title}) to UID: ${gameUid}`,
+        image: selectedTopupBox.image,
+        updatedAt: new Date().toISOString(),
+      };
+      setCheckoutInitialUid(gameUid);
+      setCheckoutItem(fakeProduct);
+      setSelectedTopupBox(null);
+    }
+  };
+
+  const handleAddMoneySuccess = async (amount: number, trxId: string, method: string) => {
+    const custId = customerUser?.uid || currentCustomer?.id || 'cust_' + Date.now();
+    const custName = customerUser?.displayName || currentCustomer?.name || 'Customer';
+    const custEmail = customerUser?.email || currentCustomer?.email || '';
+    const custPhone = currentCustomer?.phone || '01700000000';
+
+    await store.depositCustomerWallet(custId, custName, custEmail, custPhone, amount);
+  };
+
   return (
-    <div className="min-h-screen bg-[#0b0e17] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans']">
+    <div
+      className={`min-h-screen flex flex-col font-['Plus_Jakarta_Sans'] transition-colors duration-200 ${
+        isLightMode ? 'bg-[#f4f7fb] text-slate-800' : 'bg-[#0b0e17] text-slate-100'
+      }`}
+    >
       {/* =========================================================================
           VIEW 1: ADMIN LOGIN SCREEN
       ========================================================================= */}
@@ -341,14 +457,18 @@ export default function App() {
       {currentView === 'store' && (
         <div className="flex-1 flex flex-col">
           {/* Top Announcement Marquee */}
-          <PromoNotice notice={settings.promoNotice} />
+          <PromoNotice notice={settings.promoNotice} isLightMode={isLightMode} />
 
           {/* Main Navigation Bar */}
           <Navbar
             settings={settings}
             activeCategory={activeCategory}
-            onSelectCategory={setActiveCategory}
+            onSelectCategory={(cat) => {
+              setActiveCategory(cat);
+              setSelectedTopupBox(null);
+            }}
             onOpenTrackModal={() => setTrackOrderOpen(true)}
+            onOpenWelcomeSpin={() => setWelcomeSpinOpen(true)}
             onOpenAdmin={() => {
               if (adminToken) {
                 setCurrentView('admin');
@@ -358,238 +478,164 @@ export default function App() {
             }}
             onOpenCustomerProfile={() => setCustomerProfileOpen(true)}
             customerUser={customerUser}
+            customerWalletBalance={customerWalletBalance}
             onGoogleLogin={loginWithGoogle}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             isAdminLoggedIn={Boolean(adminToken)}
-          />
-
-          {/* Hero Promotional Carousel */}
-          <HeroBanner
-            banners={settings.banners}
-            onSelectCategory={(cat) => handleSelectShopCategory(cat)}
-            onOpenTrackModal={() => setTrackOrderOpen(true)}
-          />
-
-          {/* Main Content Area */}
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12">
-            {/* FRONT HUB: Sleek Category / Shop Boxes right in front */}
-            <GameShopBoxes
-              onSelectShop={handleSelectShopCategory}
-              activeShop={activeCategory}
-            />
-
-            {/* DEDICATED FREE FIRE DIAMONDS PORTAL BOX (When All or Diamond selected) */}
-            {(activeCategory === 'all' || activeCategory === 'diamond') && (
-              <div id="diamond-portal-box" className="pt-2">
-                <DiamondShopPortal
-                  products={products}
-                  onBuyDiamondPackage={(item, uid) => {
-                    setCheckoutInitialUid(uid);
-                    setCheckoutItem(item);
-                  }}
-                />
-              </div>
-            )}
-
-            {/* DEDICATED SHOP SECTION (Based on category selected) */}
-            <div id="shop-content-section" className="space-y-6 pt-4">
-              {/* Back to all button when a specific category is active */}
-              {activeCategory !== 'all' && (
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <button
-                    onClick={() => setActiveCategory('all')}
-                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#13192b] hover:bg-[#1c2540] text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>সকল শপ দেখুন (Back to All Shops)</span>
-                  </button>
-
-                  <span className="text-xs text-slate-400 font-mono">
-                    {activeCategory === 'membership'
-                      ? '১০টি উইকলি ও মান্থলি কম্বো'
-                      : activeCategory === 'mystery_box'
-                      ? '৫টি গ্যারান্টিড মিষ্টি বক্স'
-                      : activeCategory === 'level_up'
-                      ? '৫টি লেভেল আপ পাস'
-                      : activeCategory === 'social_fb' || activeCategory === 'social_insta'
-                      ? '১০০ থেকে ১০ মিলিয়ন সার্ভিস'
-                      : 'প্যাকেজ তালিকা'}
-                  </span>
-                </div>
-              )}
-
-              {/* Mystery Boxes Section (when active or all) */}
-              {showMysteryBoxes && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">🎁</span>
-                        <h2 className="font-['Orbitron'] font-black text-xl sm:text-2xl text-white tracking-wider">
-                          100% Guaranteed Mystery Boxes
-                        </h2>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        ১০০% গ্যারান্টিড ড্রপ। কেনার সাথে সাথে প্রতিটি বক্সের সম্পূর্ণ রিওয়ার্ড সরাসরি ইন-গেম UID তে চলে যায়।
-                      </p>
-                    </div>
-
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hidden sm:inline-block">
-                      ৫টি মিষ্টি বক্স এভেইলেবল
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {activeMysteryBoxes.map((box) => (
-                      <MysteryBoxCard
-                        key={box.id}
-                        box={box}
-                        onPreview={(b) => setPreviewBox(b)}
-                        onBuy={(b) => {
-                          setCheckoutInitialUid('');
-                          setCheckoutItem(b);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Memberships & Combinations Section (When All or Membership) */}
-              {(activeCategory === 'all' || activeCategory === 'membership') && (
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                    <div>
-                      <h2 className="font-['Orbitron'] font-black text-xl sm:text-2xl text-white tracking-wider flex items-center gap-2">
-                        <span>👑 Weekly &amp; Monthly Memberships (১০টি কম্বো আইটেম)</span>
-                      </h2>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        ১টি মান্থলি, ১টি উইকলি, ২টি মান্থলি, ৫টি, ১০টি মেম্বারশিপ ও সুপার মেগা কম্বো প্যাক
-                      </p>
-                    </div>
-
-                    <span className="text-xs font-semibold text-purple-400 font-mono">
-                      {products.filter((p) => p.category === 'membership' && p.isActive).length} টি আইটেম
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                    {products
-                      .filter((p) => p.category === 'membership' && p.isActive)
-                      .map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          onBuyNow={(prod) => {
-                            setCheckoutInitialUid('');
-                            setCheckoutItem(prod);
-                          }}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Level Up Passes Section (When All or Level Up) */}
-              {(activeCategory === 'all' || activeCategory === 'level_up') && (
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                    <div>
-                      <h2 className="font-['Orbitron'] font-black text-xl sm:text-2xl text-white tracking-wider flex items-center gap-2">
-                        <span>🎯 Level Up Passes (৮০২💎 পর্যন্ত আনলক)</span>
-                      </h2>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        লেভেল ২ থেকে ৩০ পর্যন্ত বিভিন্ন টায়ার এবং কমপ্লিট লেভেল আপ পাস
-                      </p>
-                    </div>
-
-                    <span className="text-xs font-semibold text-blue-400 font-mono">
-                      {products.filter((p) => p.category === 'level_up' && p.isActive).length} টি পাস
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                    {products
-                      .filter((p) => p.category === 'level_up' && p.isActive)
-                      .map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          onBuyNow={(prod) => {
-                            setCheckoutInitialUid('');
-                            setCheckoutItem(prod);
-                          }}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Evo Access Trials (When All or Evo) */}
-              {(activeCategory === 'all' || activeCategory === 'evo_access') && (
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                    <div>
-                      <h2 className="font-['Orbitron'] font-black text-xl sm:text-2xl text-white tracking-wider flex items-center gap-2">
-                        <span>⚡ Evo Gun Access (৩d, ৭d, ৩০d ট্রায়াল)</span>
-                      </h2>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        সকল ম্যাক্স ইভো গানের প্রিভিলেজ ট্রায়াল
-                      </p>
-                    </div>
-
-                    <span className="text-xs font-semibold text-yellow-400 font-mono">
-                      {products.filter((p) => p.category === 'evo_access' && p.isActive).length} টি অপশন
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
-                    {products
-                      .filter((p) => p.category === 'evo_access' && p.isActive)
-                      .map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          onBuyNow={(prod) => {
-                            setCheckoutInitialUid('');
-                            setCheckoutItem(prod);
-                          }}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Facebook & Instagram Boost Services (100 to 10 Million) with Rate List & Customizer */}
-              {(activeCategory === 'all' ||
-                activeCategory === 'social_fb' ||
-                activeCategory === 'social_insta') && (
-                <div id="social-boost-portal-section" className="pt-4">
-                  <SocialBoostPortal
-                    products={products}
-                    onBuySocialPackage={(customItem, targetUrl) => {
-                      setCheckoutInitialUid(targetUrl);
-                      setCheckoutItem(customItem);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </main>
-
-          {/* Customer Footer */}
-          <Footer
-            settings={settings}
-            onOpenPolicy={(type) => setPolicyModalType(type)}
-            onOpenAdmin={() => {
-              if (adminToken) {
-                setCurrentView('admin');
-              } else {
-                setCurrentView('admin_login');
-              }
+            isLightMode={isLightMode}
+            onToggleTheme={toggleTheme}
+            onScrollToLiveOrders={() => {
+              setSelectedTopupBox(null);
+              setTimeout(() => {
+                document.getElementById('recent-live-orders-section')?.scrollIntoView({ behavior: 'smooth' });
+              }, 50);
+            }}
+            onScrollToContact={() => {
+              setSelectedTopupBox(null);
+              setTimeout(() => {
+                document.getElementById('customer-footer-section')?.scrollIntoView({ behavior: 'smooth' });
+              }, 50);
             }}
           />
+
+          {/* DEDICATED PRODUCT RECHARGE PAGE OR HOMEPAGE BOXES */}
+          {selectedTopupBox ? (
+            <TopupBuzzProductPage
+              boxId={selectedTopupBox.id}
+              boxTitle={selectedTopupBox.title}
+              boxCategory={selectedTopupBox.category}
+              boxImage={selectedTopupBox.image}
+              badge={selectedTopupBox.badge || '২ সেকেন্ডে টপআপ'}
+              packages={selectedTopupBox.packages}
+              onBack={() => setSelectedTopupBox(null)}
+              onProceedOrder={handleProceedBoxOrder}
+              walletBalance={customerWalletBalance}
+              onOpenAddMoney={() => setAddMoneyOpen(true)}
+              isLightMode={isLightMode}
+            />
+          ) : (
+            <>
+              {/* Hero Promotional Carousel */}
+              <HeroBanner
+                banners={settings.banners}
+                onSelectCategory={(cat) => handleSelectShopCategory(cat)}
+                onOpenTrackModal={() => setTrackOrderOpen(true)}
+                isLightMode={isLightMode}
+              />
+
+              {/* Main Content Area */}
+              <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-12">
+                {/* 1. TOPUPPAPA BOX SECTIONS (Mystery Box, Bonus Offer, Games Topup, FB Services, Entertainment) */}
+                <TopupPapaBoxGrid
+                  products={products}
+                  mysteryBoxes={mysteryBoxes}
+                  onOpenBoxPurchase={(box) => setSelectedTopupBox(box)}
+                  isLightMode={isLightMode}
+                />
+
+                {/* 2. RECENT LIVE ORDERS WIDGET (Matching Screenshot 4) */}
+                <div id="recent-live-orders-section" className="pt-2">
+                  <RecentLiveOrdersWidget
+                    orders={orders}
+                    onTrackOrder={(num) => {
+                      setTrackOrderNumber(num);
+                      setTrackOrderOpen(true);
+                    }}
+                    isLightMode={isLightMode}
+                  />
+                </div>
+              </main>
+            </>
+          )}
+
+          {/* Customer Footer */}
+          <div id="customer-footer-section">
+            <Footer
+              settings={settings}
+              onOpenPolicy={(type) => setPolicyModalType(type)}
+              onOpenAdmin={() => {
+                if (adminToken) {
+                  setCurrentView('admin');
+                } else {
+                  setCurrentView('admin_login');
+                }
+              }}
+            />
+          </div>
+
+          {/* Fixed Bottom Mobile Navigation Bar (Screenshot 4) */}
+          <BottomMobileBar
+            onGoHome={() => setSelectedTopupBox(null)}
+            onOpenOrders={() => setTrackOrderOpen(true)}
+            onOpenAddMoney={() => setAddMoneyOpen(true)}
+            onOpenCodes={() => setUserVouchersOpen(true)}
+            onOpenAccount={() => {
+              if (customerUser) {
+                setCustomerProfileOpen(true);
+              } else {
+                loginWithGoogle();
+              }
+            }}
+            isLightMode={isLightMode}
+          />
+
+          {/* Floating Headset Support Button */}
+          <FloatingSupportButton
+            whatsappNumber="01575630127"
+            telegramChannelUrl="https://t.me/khantopupbd"
+            telegramGroupUrl="https://t.me/khantopupgroup"
+            contactPhone="01575630127"
+            isLightMode={isLightMode}
+          />
+
+          {/* Add Money Modal */}
+          {addMoneyOpen && (
+            <AddMoneyModal
+              currentBalance={customerWalletBalance}
+              paymentConfigs={payments}
+              onClose={() => setAddMoneyOpen(false)}
+              onAddMoneySuccess={handleAddMoneySuccess}
+              isLightMode={isLightMode}
+            />
+          )}
+
+          {/* User Codes / Vouchers Modal */}
+          {userVouchersOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white dark:bg-[#121929] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="font-bold text-base flex items-center gap-2">
+                    <span className="text-xl">🎟️</span>
+                    <span>My Codes &amp; Vouchers (ডিজিটাল ভাউচার)</span>
+                  </h3>
+                  <button
+                    onClick={() => setUserVouchersOpen(false)}
+                    className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="py-6 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950 text-[#0066FF] flex items-center justify-center mx-auto">
+                    <span className="text-2xl font-mono">🎫</span>
+                  </div>
+                  <h4 className="font-bold text-sm">কোন সক্রিয় ভাউচার কোড নেই</h4>
+                  <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                    ইউনিপিন বা ডিজিটাল সাবস্ক্রিপশন কোড কিনলে এখানে আপনার সক্রিয় কোড ও রিডিম পিন দেখতে পাবেন।
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setUserVouchersOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-[#0066FF] text-white font-bold text-xs"
+                >
+                  বন্ধ করুন (Close)
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Gemini AI Chatbot */}
           <GeminiChatbot />
@@ -625,6 +671,7 @@ export default function App() {
                   status: 'Pending',
                   adminNote: 'Order submitted. Awaiting admin bKash/Nagad verification.',
                 });
+                recordUserRecentOrderId(order.orderNumber);
                 return order;
               }}
               onTrackOrder={(orderNumber) => {
@@ -636,17 +683,58 @@ export default function App() {
             />
           )}
 
-          {/* Live Order Tracker Modal */}
+          {/* Floating Welcome Spin Button */}
+          <div className="fixed bottom-16 left-3 sm:bottom-6 sm:left-6 z-40 animate-bounce-subtle">
+            <button
+              onClick={() => setWelcomeSpinOpen(true)}
+              className="group flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-500/30 border-2 border-white dark:border-amber-300 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
+              title="Welcome Bonus Spin - Win up to 8,000 Diamonds!"
+            >
+              <span className="text-xl animate-spin-slow">🎡</span>
+              <div className="flex flex-col text-left">
+                <span className="font-['Orbitron'] font-black leading-tight text-slate-950">
+                  Welcome Spin
+                </span>
+                <span className="text-[10px] text-amber-950 font-bold opacity-90">
+                  ৮,০০০💎 বোনাস
+                </span>
+              </div>
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+              </span>
+            </button>
+          </div>
+
+          {/* My Order & Status Tracker Modal */}
           {trackOrderOpen && (
-            <TrackOrderModal
+            <MyOrderModal
               orders={orders}
-              initialOrderNumber={trackOrderNumber}
+              initialSearchQuery={trackOrderNumber}
+              customerUser={customerUser}
+              isLightMode={isLightMode}
               onClose={() => {
                 setTrackOrderOpen(false);
                 setTrackOrderNumber('');
               }}
+              onGoToShop={() => {
+                setSelectedTopupBox(null);
+                window.scrollTo({ top: 300, behavior: 'smooth' });
+              }}
             />
           )}
+
+          {/* Welcome Bonus Spin Wheel Modal */}
+          <WelcomeBonusSpinModal
+            isOpen={welcomeSpinOpen}
+            onClose={() => setWelcomeSpinOpen(false)}
+            onClaimToShop={() => {
+              setWelcomeSpinOpen(false);
+              setSelectedTopupBox(null);
+              window.scrollTo({ top: 350, behavior: 'smooth' });
+            }}
+            isLightMode={isLightMode}
+          />
 
           {/* Customer Profile & Past Orders Modal */}
           {customerProfileOpen && (

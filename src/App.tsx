@@ -18,6 +18,7 @@ import { TelegramNoticeBar } from './components/TelegramNoticeBar';
 import { HeroBanner } from './components/HeroBanner';
 import { GameShopBoxes } from './components/GameShopBoxes';
 import { TopupPapaBoxGrid, TopupBoxItem } from './components/TopupPapaBoxGrid';
+import { MysteryBoxStoreSection } from './components/MysteryBoxStoreSection';
 import { TopupBuzzProductPage } from './components/TopupBuzzProductPage';
 import { AddMoneyModal } from './components/AddMoneyModal';
 import { BottomMobileBar } from './components/BottomMobileBar';
@@ -98,6 +99,7 @@ export default function App() {
   // Customer Modals
   const [welcomeSpinOpen, setWelcomeSpinOpen] = useState(false);
   const [previewBox, setPreviewBox] = useState<MysteryBox | null>(null);
+  const [previewBoxMode, setPreviewBoxMode] = useState<'view' | 'open'>('view');
   const [checkoutItem, setCheckoutItem] = useState<Product | MysteryBox | null>(null);
   const [checkoutInitialUid, setCheckoutInitialUid] = useState('');
   const [trackOrderOpen, setTrackOrderOpen] = useState(false);
@@ -146,12 +148,16 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // Customer Firebase Auth listener
+  // Customer Firebase Auth listener & Secure Data Sync
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       setCustomerUser(user);
+      store.updateAuthUser(user);
     });
-    return unsubAuth;
+    return () => {
+      unsubAuth();
+      store.updateAuthUser(null);
+    };
   }, []);
 
   // Verify Admin Session Token on boot
@@ -224,6 +230,7 @@ export default function App() {
       }
     } catch {}
     localStorage.removeItem('ktu_admin_token');
+    localStorage.removeItem('ktu_admin_session');
     setAdminToken(null);
     setCurrentView('store');
   };
@@ -526,11 +533,34 @@ export default function App() {
 
               {/* Main Content Area */}
               <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-12">
-                {/* 1. TOPUPPAPA BOX SECTIONS (Mystery Box, Bonus Offer, Games Topup, FB Services, Entertainment) */}
+                {/* 1. DEDICATED MYSTERY BOX STORE (15 Boxes, 24h Cooldown, 3D Unboxing & Rewards) */}
+                <MysteryBoxStoreSection
+                  mysteryBoxes={mysteryBoxes}
+                  onPreviewBox={(box, mode) => {
+                    setPreviewBox(box);
+                    setPreviewBoxMode(mode || 'view');
+                  }}
+                  onBuyBox={(box) => {
+                    setCheckoutInitialUid('');
+                    setCheckoutItem(box);
+                  }}
+                  userId={customerUser?.uid}
+                  isLightMode={isLightMode}
+                />
+
+                {/* 2. TOPUPPAPA BOX SECTIONS (Bonus Offer, Games Topup, FB Services, Entertainment) */}
                 <TopupPapaBoxGrid
                   products={products}
                   mysteryBoxes={mysteryBoxes}
                   onOpenBoxPurchase={(box) => setSelectedTopupBox(box)}
+                  onPreviewMysteryBox={(box, mode) => {
+                    setPreviewBox(box);
+                    setPreviewBoxMode(mode || 'view');
+                  }}
+                  onBuyMysteryBox={(box) => {
+                    setCheckoutInitialUid('');
+                    setCheckoutItem(box);
+                  }}
                   isLightMode={isLightMode}
                 />
 
@@ -644,6 +674,10 @@ export default function App() {
           {previewBox && (
             <GuaranteedRewardsModal
               box={previewBox}
+              initialMode={previewBoxMode}
+              userId={customerUser?.uid}
+              userName={customerUser?.displayName || currentCustomer?.name}
+              userPhone={currentCustomer?.phone}
               onClose={() => setPreviewBox(null)}
               onBuy={(b) => {
                 setPreviewBox(null);

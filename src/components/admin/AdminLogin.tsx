@@ -13,6 +13,8 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 
+import { loginAdmin, changeAdminPassword } from '../../services/authHelper';
+
 interface AdminLoginProps {
   onLoginSuccess: (token: string, mustChangePassword: boolean) => void;
   onBackToStore: () => void;
@@ -37,35 +39,28 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onBackTo
     setError('');
 
     if (!password) {
-      setError('Please enter administrator password');
+      setError('অনুগ্রহ করে অ্যাডমিন পাসওয়ার্ড প্রদান করুন (Please enter password)');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
+      const result = await loginAdmin(password);
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Invalid administrator password');
+      if (!result.success) {
+        throw new Error(result.message || 'ভুল অ্যাডমিন পাসওয়ার্ড। অনুগ্রহ করে সঠিক পাসওয়ার্ড দিন।');
       }
 
       // If initial password was used and must be changed
-      if (data.mustChangePassword) {
-        setPendingToken(data.token);
+      if (result.mustChangePassword) {
+        setPendingToken(result.token);
         setIsForcePasswordChange(true);
       } else {
-        localStorage.setItem('ktu_admin_token', data.token);
-        onLoginSuccess(data.token, false);
+        onLoginSuccess(result.token, false);
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please verify credentials.');
+      setError(err.message || 'অথেন্টিকেশন ব্যর্থ হয়েছে। অনুগ্রহ করে সঠিক পাসওয়ার্ড দিন।');
     } finally {
       setIsLoading(false);
     }
@@ -76,42 +71,32 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onBackTo
     setError('');
 
     if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long');
+      setError('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('পাসওয়ার্ড দুটি মেলেনি (Passwords do not match)');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/admin/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${pendingToken}`,
-        },
-        body: JSON.stringify({ newPassword }),
-      });
+      const res = await changeAdminPassword(newPassword, pendingToken || '');
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to update master password');
+      if (!res.success) {
+        throw new Error(res.message || 'পাসওয়ার্ড আপডেট করতে সমস্যা হয়েছে');
       }
 
       setPasswordChangeSuccess(true);
       if (pendingToken) {
-        localStorage.setItem('ktu_admin_token', pendingToken);
         setTimeout(() => {
           onLoginSuccess(pendingToken, false);
-        }, 1500);
+        }, 1200);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to update password');
+      setError(err.message || 'পাসওয়ার্ড পরিবর্তন ব্যর্থ হয়েছে');
     } finally {
       setIsLoading(false);
     }

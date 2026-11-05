@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow_mb_special" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fb923c" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="#f97316" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#ea580c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lidGrad_mb_special" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <linearGradient id="bodyGrad_mb_special" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#0a0518"/>
+    </linearGradient>
+    <linearGradient id="goldBand" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+    <filter id="glowFilter_mb_special" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Aura Glow -->
+  <circle cx="160" cy="160" r="140" fill="url(#bgGlow_mb_special)"/>
+
+  <!-- Chest Body (Isometric 3D) -->
+  <g filter="url(#glowFilter_mb_special)">
+    <!-- Bottom Shadow -->
+    <ellipse cx="160" cy="275" rx="100" ry="25" fill="#000000" opacity="0.6"/>
+
+    <!-- Main Front Face -->
+    <path d="M 70 160 L 250 160 L 240 255 L 80 255 Z" fill="url(#bodyGrad_mb_special)" stroke="#fb923c" stroke-width="3" stroke-linejoin="round"/>
+
+    <!-- Left & Right Reinforced Metal Edges -->
+    <path d="M 70 160 L 95 160 L 100 255 L 80 255 Z" fill="#ea580c" opacity="0.8"/>
+    <path d="M 225 160 L 250 160 L 240 255 L 220 255 Z" fill="#ea580c" opacity="0.8"/>
+
+    <!-- Center Vertical Gold Ribbon -->
+    <rect x="145" y="160" width="30" height="95" fill="url(#goldBand)" opacity="0.95"/>
+
+    <!-- Chest Lid / Top (Trapezoid 3D) -->
+    <path d="M 50 160 L 75 110 L 245 110 L 270 160 Z" fill="url(#lidGrad_mb_special)" stroke="#fbbf24" stroke-width="3.5" stroke-linejoin="round"/>
+    <!-- Lid Top Face -->
+    <path d="M 75 110 L 115 80 L 205 80 L 245 110 Z" fill="#fb923c" opacity="0.75" stroke="#fef08a" stroke-width="2"/>
+
+    <!-- Golden Lock Emblem -->
+    <circle cx="160" cy="160" r="24" fill="url(#goldBand)" stroke="#fef08a" stroke-width="2.5"/>
+    <circle cx="160" cy="160" r="18" fill="#1e1035"/>
+    <!-- Keyhole -->
+    <circle cx="160" cy="156" r="5" fill="#fbbf24"/>
+    <polygon points="158,158 162,158 164,168 156,168" fill="#fbbf24"/>
+
+    <!-- Glowing Corner Rivets -->
+    <circle cx="85" cy="175" r="3.5" fill="#fef08a"/>
+    <circle cx="235" cy="175" r="3.5" fill="#fef08a"/>
+    <circle cx="92" cy="242" r="3.5" fill="#fef08a"/>
+    <circle cx="228" cy="242" r="3.5" fill="#fef08a"/>
+
+    <!-- Light Sparks -->
+    <polygon points="160,55 163,65 173,68 163,71 160,81 157,71 147,68 157,65" fill="#fef08a"/>
+    <polygon points="65,95 67,102 74,104 67,106 65,113 63,106 56,104 63,102" fill="#fb923c"/>
+    <polygon points="255,95 257,102 264,104 257,106 255,113 253,106 246,104 253,102" fill="#fb923c"/>
+  </g>
+</svg>

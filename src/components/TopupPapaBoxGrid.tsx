@@ -37,6 +37,8 @@ interface TopupPapaBoxGridProps {
   products: Product[];
   mysteryBoxes: MysteryBox[];
   onOpenBoxPurchase: (box: TopupBoxItem) => void;
+  onPreviewMysteryBox?: (box: MysteryBox, mode?: 'view' | 'open') => void;
+  onBuyMysteryBox?: (box: MysteryBox) => void;
   isLightMode?: boolean;
 }
 
@@ -44,6 +46,8 @@ export const TopupPapaBoxGrid: React.FC<TopupPapaBoxGridProps> = ({
   products,
   mysteryBoxes,
   onOpenBoxPurchase,
+  onPreviewMysteryBox,
+  onBuyMysteryBox,
   isLightMode = true,
 }) => {
   // 1. FREE FIRE DIAMOND PACKAGES (User's Exact Requested Rates: 25💎=18 TK, 50💎=25 TK up to 12,000💎)
@@ -594,42 +598,114 @@ export const TopupPapaBoxGrid: React.FC<TopupPapaBoxGridProps> = ({
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-          {renderPapaCard({
-            id: 'box_mystery_offer',
-            category: 'mystery_box',
-            title: '🎁 Mystery Box Offer',
-            subtitle: '১০০% গ্যারান্টিড ড্রপ (১৫টি অপশন)',
-            image: '/assets/branding/mystery_box_standard.svg',
-            packages: mysteryBoxPackages,
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto">
+          {mysteryBoxes.slice(0, 4).map((box) => (
+            <div
+              key={box.id}
+              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-[#111827] border-slate-200/90 dark:border-slate-800"
+            >
+              {/* Top Image Banner with 3D Chest & Shimmer */}
+              <div
+                onClick={() =>
+                  onPreviewMysteryBox
+                    ? onPreviewMysteryBox(box, 'view')
+                    : onOpenBoxPurchase({
+                        id: box.id,
+                        category: 'mystery_box',
+                        title: box.name,
+                        image: box.image,
+                        packages: mysteryBoxPackages,
+                      })
+                }
+                className="relative aspect-[4/3] sm:aspect-square w-full overflow-hidden bg-gradient-to-b from-amber-950/30 via-slate-900 to-[#0e1424] flex items-center justify-center p-3 cursor-pointer"
+                title="মিষ্টি বক্সের ভেতরের পুরষ্কার দেখতে ক্লিক করুন"
+              >
+                {/* Radial golden glow */}
+                <div className="absolute w-24 h-24 sm:w-32 sm:h-32 bg-amber-500/20 rounded-full blur-xl group-hover:bg-amber-400/35 transition-all" />
 
-          {renderPapaCard({
-            id: 'box_vip_mystery',
-            category: 'mystery_box',
-            title: '👑 VIP Lucky Mystery Box',
-            subtitle: 'লাকি ড্রপ ও ইভো গান টোকেন',
-            image: '/assets/branding/mystery_box_lucky.svg',
-            packages: mysteryBoxPackages,
-          })}
+                <img
+                  src={box.image}
+                  alt={box.name}
+                  className="relative z-10 w-full h-full max-h-28 sm:max-h-36 object-contain filter drop-shadow-[0_8px_16px_rgba(245,158,11,0.35)] group-hover:scale-108 transition-transform duration-500"
+                />
 
-          {renderPapaCard({
-            id: 'box_legend_mystery',
-            category: 'mystery_box',
-            title: '🔥 Legendary Mystery Box',
-            subtitle: 'রেয়ার ইমোট ও ড্রাগন বান্ডেল ক্রাফট',
-            image: '/assets/branding/mystery_box_legendary.svg',
-            packages: mysteryBoxPackages,
-          })}
+                {/* Top left badge: 5 SEC DELIVERY */}
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-[#0066FF] text-white shadow-md z-20">
+                  5 SEC DELIVERY
+                </div>
 
-          {renderPapaCard({
-            id: 'box_jackpot_mystery',
-            category: 'mystery_box',
-            title: '💎 Mega Jackpot Mystery Box',
-            subtitle: 'সর্বোচ্চ ১০,০০০ ডায়মন্ড উইন চান্স',
-            image: '/assets/branding/mystery_box_jackpot.svg',
-            packages: mysteryBoxPackages,
-          })}
+                {/* Top right badge: 100% Guaranteed */}
+                <div className="absolute top-2 right-2 px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-amber-500 text-black shadow-md z-20">
+                  {box.badge || '১০০% ড্রপ'}
+                </div>
+              </div>
+
+              {/* Bottom Card Content */}
+              <div className="p-3 text-center border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#111827] flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 group-hover:text-[#0066FF] dark:group-hover:text-amber-400 transition-colors line-clamp-1">
+                    {box.name}
+                  </h3>
+                  <div className="flex items-center justify-center gap-1 mt-1 text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px]">
+                    <span className="text-emerald-500">✓</span>
+                    <span>{box.guaranteedRewards?.length || 4} টি নিশ্চিত আইটেম</span>
+                  </div>
+                  <div className="mt-1 font-['Orbitron'] font-black text-sm sm:text-base text-amber-500 dark:text-amber-400">
+                    ৳{box.price}
+                  </div>
+                </div>
+
+                {/* Interactive Action Buttons: View Rewards & Open Box */}
+                <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onPreviewMysteryBox) {
+                        onPreviewMysteryBox(box, 'view');
+                      } else {
+                        onOpenBoxPurchase({
+                          id: box.id,
+                          category: 'mystery_box',
+                          title: box.name,
+                          image: box.image,
+                          packages: mysteryBoxPackages,
+                        });
+                      }
+                    }}
+                    className="py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-cyan-300 text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                    title="ভেতরের সকল পুরষ্কার ও ড্রপ চান্স দেখুন"
+                  >
+                    <span>👁️</span>
+                    <span>পুরষ্কার</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onPreviewMysteryBox) {
+                        onPreviewMysteryBox(box, 'open');
+                      } else {
+                        onOpenBoxPurchase({
+                          id: box.id,
+                          category: 'mystery_box',
+                          title: box.name,
+                          image: box.image,
+                          packages: mysteryBoxPackages,
+                        });
+                      }
+                    }}
+                    className="py-1.5 px-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95 cursor-pointer"
+                    title="৩ডি অ্যানিমেশনসহ বক্স খুলুন"
+                  >
+                    <span>🎁</span>
+                    <span>খুলুন</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

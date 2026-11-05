@@ -190,6 +190,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Subscriptions</span>
             </button>
 
+            {/* Dedicated Mystery Box Store Link */}
+            <button
+              onClick={() => {
+                const el = document.getElementById('mystery-box-store-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  onSelectCategory('mystery_box');
+                }
+              }}
+              className="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-gradient-to-r from-purple-900/40 via-amber-900/30 to-purple-900/40 text-amber-400 hover:text-amber-300 border border-amber-500/30 font-bold"
+            >
+              <span className="text-xs">🎁</span>
+              <span>Mystery Box</span>
+              <span className="text-[9px] px-1 py-0.5 rounded bg-purple-600 text-white font-black uppercase">
+                ১৫টি বক্স
+              </span>
+            </button>
+
             {/* My Order Desktop Nav Link */}
             <button
               onClick={onOpenTrackModal}
@@ -428,6 +447,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>My Order</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  const el = document.getElementById('mystery-box-store-section');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    onSelectCategory('mystery_box');
+                  }
+                }}
+                className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-purple-900/50 to-amber-900/40 text-amber-300 border border-amber-500/40 shadow-xs"
+              >
+                <span>🎁</span>
+                <span>Mystery Box (১৫টি)</span>
               </button>
 
               {onOpenWelcomeSpin && (

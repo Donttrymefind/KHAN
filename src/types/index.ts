@@ -36,6 +36,9 @@ export interface GuaranteedReward {
   icon: string;
   rarity: 'Mythic' | 'Legendary' | 'Epic' | 'Rare';
   description?: string;
+  probability?: number; // Approximate win chance percentage (e.g. 15%)
+  image?: string;
+  isJackpot?: boolean;
 }
 
 export interface MysteryBox {
@@ -48,8 +51,34 @@ export interface MysteryBox {
   isUnlimited: boolean;
   isActive: boolean;
   guaranteedRewards: GuaranteedReward[];
+  cooldownHours?: number; // 24 for Royal and Special boxes
+  description?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MysteryBoxOpeningRecord {
+  id: string;
+  userId: string;
+  userName?: string;
+  userPhone?: string;
+  boxId: string;
+  boxName: string;
+  pricePaid: number;
+  reward: GuaranteedReward;
+  openedAt: string;
+  transactionId?: string;
+  gameUid?: string;
+}
+
+export interface BoxCooldownInfo {
+  boxId: string;
+  boxName: string;
+  lastOpenedAt: string | null;
+  nextAvailableAt: string | null;
+  remainingSeconds: number;
+  isAvailable: boolean;
+  cooldownHours: number;
 }
 
 export type OrderStatus = 'Pending' | 'Processing' | 'Completed' | 'Rejected';

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "mbo_1793876831842_2xe4i",
+    "userId": "test_tester_1",
+    "userName": "Customer",
+    "userPhone": "",
+    "boxId": "mb_royal",
+    "boxName": "Royal Box",
+    "pricePaid": 650,
+    "reward": {
+      "id": "r1",
+      "name": "Weekly Membership",
+      "quantity": "1x",
+      "icon": "🎁",
+      "description": "",
+      "isJackpot": false,
+      "probability": 100
+    },
+    "openedAt": "2026-11-05T11:07:11.842Z",
+    "transactionId": "MBOX_1793876831842",
+    "gameUid": "Player UID"
+  }
+]

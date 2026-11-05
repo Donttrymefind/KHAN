@@ -1,0 +1,58 @@
+[
+  {
+    "id": "log_1793876870645_471u8",
+    "action": "RESET_COOLDOWN",
+    "details": "Reset cooldown for user test_tester_1 on box mb_royal",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T11:07:50.645Z"
+  },
+  {
+    "id": "log_1793876860385_p9a1y",
+    "action": "LOGIN_SUCCESS",
+    "details": "First-time admin login (password change required)",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T11:07:40.385Z"
+  },
+  {
+    "id": "log_1793876831843_klz50",
+    "action": "MYSTERY_BOX_UNBOX",
+    "details": "User test_tester_1 unboxed Royal Box -> Won: Weekly Membership (1x)",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T11:07:11.843Z"
+  },
+  {
+    "id": "log_1793875339249_ilijs",
+    "action": "MYSTERY_BOX_UNBOX",
+    "details": "Unboxed Mega Jackpot Mystery Box -> Won: 500 Diamonds (500 💎) for UID: Guest",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T10:42:19.249Z"
+  },
+  {
+    "id": "log_1793875323063_hq238",
+    "action": "LOGIN_FAILED",
+    "details": "Failed login attempt with invalid password",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T10:42:03.063Z"
+  },
+  {
+    "id": "log_1793875318529_yh1xr",
+    "action": "LOGIN_SUCCESS",
+    "details": "First-time admin login (password change required)",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T10:41:58.529Z"
+  },
+  {
+    "id": "log_1793873909784_zjra8",
+    "action": "LOGIN_SUCCESS",
+    "details": "First-time admin login (password change required)",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T10:18:29.784Z"
+  },
+  {
+    "id": "log_1793873898044_un2ql",
+    "action": "LOGIN_FAILED",
+    "details": "Failed login attempt with invalid password",
+    "adminUser": "SuperAdmin",
+    "createdAt": "2026-11-05T10:18:18.044Z"
+  }
+]

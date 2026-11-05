@@ -22,6 +22,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Connection testing per Firebase skill
+    match /test/{testId} {
+      allow read: if true;
+    }
+
     // Admins list
     match /admins/{adminId} {
       allow read: if isSignedIn();

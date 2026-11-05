@@ -71,9 +71,21 @@ export async function loginWithGoogle() {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
-  } catch (error) {
-    console.error('Google Sign-in failed:', error);
-    throw error;
+  } catch (error: any) {
+    // Gracefully handle normal user actions like closing the popup or browser popup blocking
+    if (
+      error?.code === 'auth/popup-closed-by-user' ||
+      error?.code === 'auth/cancelled-popup-request'
+    ) {
+      // User closed popup before authenticating, cleanly return null
+      return null;
+    }
+    if (error?.code === 'auth/popup-blocked') {
+      console.warn('Google Sign-in popup was blocked by browser. Please enable popups.');
+      return null;
+    }
+    console.error('Google Sign-in error:', error);
+    return null;
   }
 }
 

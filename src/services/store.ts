@@ -7,6 +7,7 @@ import {
   deleteDoc,
   onSnapshot,
   query,
+  where,
   orderBy,
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, testConnection } from './firebase';
@@ -75,7 +76,15 @@ function loadProducts(): Product[] {
   return stored;
 }
 
+const BOXES_VERSION = 'v3_15_mystery_boxes_cooldown_store';
+
 function loadBoxes(): MysteryBox[] {
+  const currentVersion = localStorage.getItem('ktu_boxes_ver');
+  if (currentVersion !== BOXES_VERSION) {
+    localStorage.setItem('ktu_boxes_ver', BOXES_VERSION);
+    saveLocal(STORAGE_KEYS.BOXES, INITIAL_MYSTERY_BOXES);
+    return INITIAL_MYSTERY_BOXES;
+  }
   const stored = loadLocal<MysteryBox[]>(STORAGE_KEYS.BOXES, []);
   if (!stored || stored.length === 0) return INITIAL_MYSTERY_BOXES;
   const storedMap = new Map(stored.map((b) => [b.id, b]));
@@ -97,6 +106,8 @@ class StoreService {
 
   private listeners: Set<() => void> = new Set();
   private isInitialized = false;
+  private ordersUnsubscribe: (() => void) | null = null;
+  private customersUnsubscribe: (() => void) | null = null;
 
   subscribe(callback: () => void): () => void {
     this.listeners.add(callback);
@@ -119,8 +130,7 @@ class StoreService {
       this.initMysteryBoxesListener();
       this.initPaymentsListener();
       this.initSettingsListener();
-      this.initOrdersListener();
-      this.initCustomersListener();
+      // Orders & Customers listeners are attached only after user/admin authentication via updateAuthUser()
     } catch (err) {
       console.warn('Real-time Firestore listeners error, running in local fallback mode:', err);
     }
@@ -390,36 +400,105 @@ class StoreService {
     } catch {}
   }
 
-  // --- Orders ---
-  private initOrdersListener() {
-    const colRef = collection(db, 'orders');
-    onSnapshot(
-      colRef,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const list: Order[] = [];
-          snapshot.forEach((docSnap) => list.push(docSnap.data() as Order));
-          // Sort newest first
-          list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          this.orders = list;
-          saveLocal(STORAGE_KEYS.ORDERS, list);
-          this.notify();
-        } else {
-          this.seedInitialOrders();
-        }
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.GET, 'orders');
-      }
-    );
-  }
+  // --- Orders & Customers Real-Time Sync (Auth Gated) ---
+  updateAuthUser(user: any | null) {
+    if (this.ordersUnsubscribe) {
+      this.ordersUnsubscribe();
+      this.ordersUnsubscribe = null;
+    }
+    if (this.customersUnsubscribe) {
+      this.customersUnsubscribe();
+      this.customersUnsubscribe = null;
+    }
 
-  private async seedInitialOrders() {
-    try {
-      for (const ord of INITIAL_ORDERS) {
-        await setDoc(doc(db, 'orders', ord.id), ord);
-      }
-    } catch {}
+    if (!user) {
+      // Guest or unauthenticated visitor: no live listeners attached to private collections
+      return;
+    }
+
+    const isAdminUser = user.email === 'xarinnesi@gmail.com';
+
+    if (isAdminUser) {
+      // Admin: monitor full orders collection
+      const colRef = collection(db, 'orders');
+      this.ordersUnsubscribe = onSnapshot(
+        colRef,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const list: Order[] = [];
+            snapshot.forEach((docSnap) => list.push(docSnap.data() as Order));
+            list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            this.orders = list;
+            saveLocal(STORAGE_KEYS.ORDERS, list);
+            this.notify();
+          }
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.GET, 'orders');
+        }
+      );
+
+      // Admin: monitor full customers collection
+      const custCol = collection(db, 'customers');
+      this.customersUnsubscribe = onSnapshot(
+        custCol,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const list: Customer[] = [];
+            snapshot.forEach((docSnap) => list.push(docSnap.data() as Customer));
+            this.customers = list;
+            saveLocal(STORAGE_KEYS.CUSTOMERS, list);
+            this.notify();
+          }
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.GET, 'customers');
+        }
+      );
+    } else {
+      // Logged-in customer: query only own orders matching customerId == auth.uid
+      const userOrdersQuery = query(collection(db, 'orders'), where('customerId', '==', user.uid));
+      this.ordersUnsubscribe = onSnapshot(
+        userOrdersQuery,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const userOrders: Order[] = [];
+            snapshot.forEach((docSnap) => userOrders.push(docSnap.data() as Order));
+            const map = new Map(this.orders.map((o) => [o.id, o]));
+            userOrders.forEach((o) => map.set(o.id, o));
+            this.orders = Array.from(map.values()).sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            saveLocal(STORAGE_KEYS.ORDERS, this.orders);
+            this.notify();
+          }
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.GET, 'orders');
+        }
+      );
+
+      // Customer profile: listen only to customer document with id == auth.uid
+      const custDocRef = doc(db, 'customers', user.uid);
+      this.customersUnsubscribe = onSnapshot(
+        custDocRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const custData = docSnap.data() as Customer;
+            const updated = this.customers.map((c) => (c.id === custData.id ? custData : c));
+            if (!updated.some((c) => c.id === custData.id)) {
+              updated.push(custData);
+            }
+            this.customers = updated;
+            saveLocal(STORAGE_KEYS.CUSTOMERS, this.customers);
+            this.notify();
+          }
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.GET, `customers/${user.uid}`);
+        }
+      );
+    }
   }
 
   async createOrder(orderData: Omit<Order, 'id' | 'orderNumber' | 'createdAt' | 'updatedAt'>): Promise<Order> {
@@ -493,35 +572,7 @@ class StoreService {
     }
   }
 
-  // --- Customers ---
-  private initCustomersListener() {
-    const colRef = collection(db, 'customers');
-    onSnapshot(
-      colRef,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const list: Customer[] = [];
-          snapshot.forEach((docSnap) => list.push(docSnap.data() as Customer));
-          this.customers = list;
-          saveLocal(STORAGE_KEYS.CUSTOMERS, list);
-          this.notify();
-        } else {
-          this.seedInitialCustomers();
-        }
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.GET, 'customers');
-      }
-    );
-  }
-
-  private async seedInitialCustomers() {
-    try {
-      for (const cust of INITIAL_CUSTOMERS) {
-        await setDoc(doc(db, 'customers', cust.id), cust);
-      }
-    } catch {}
-  }
+  // --- Customers Recording ---
 
   private async recordCustomerOrder(order: Order) {
     const existing = this.customers.find(
